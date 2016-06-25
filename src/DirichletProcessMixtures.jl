@@ -6,10 +6,6 @@ using ArrayViews
 using Distributions
 using PDMats
 
-include("TSBPMM.jl")
-include("student.jl")
-include("gaussian_mixture.jl")
-
 # Multidimensional gamma / partial gamma function
 function lpgamma(p::Int, a::Float64)
     res::Float64 = p * (p - 1.0) / 4.0 * log(pi)
@@ -18,4 +14,9 @@ function lpgamma(p::Int, a::Float64)
     end
     return res
 end
+
+include("TSBPMM.jl")
+include("student.jl")
+include("gaussian_mixture.jl")
+
 end
