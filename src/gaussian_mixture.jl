@@ -86,7 +86,7 @@ end
 
 function gaussian_mixture(prior::NormalWishart, T::Int64, alpha::Float64, x::Matrix{Float64})
     dim, N = size(x)
-    theta = Array(NormalWishart, T)
+    theta = Array{NormalWishart}(T)
 
     for k=1:T
         theta[k] = prior
