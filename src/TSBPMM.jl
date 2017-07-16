@@ -42,7 +42,7 @@ function TSBPMM(N::Int64, T::Int64, α::Float64,
         rand!(logpi)
         ps = sum(logpi)
         logpi ./= ps
-        logpi = log(logpi)
+        logpi = log.(logpi)
 
         rand!(z)
         for i=1:N
@@ -50,8 +50,8 @@ function TSBPMM(N::Int64, T::Int64, α::Float64,
             z[i, :] ./= zs
         end
     else
-        logpi[:] = -log(T)
-        z[:, :] = 1. / T
+        logpi .= -log.(T)
+        z .= 1. / T
     end
 
     return TSBPMM(N, T, α,
@@ -95,7 +95,7 @@ function variational_update(mix::TSBPMM)
         end
 
         z .-= maximum(z)
-        z = exp(z)
+        z .= exp.(z)
         z ./= sum(z)
 
         assert(abs(sum(z) - 1.) < 1e-7)

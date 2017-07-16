@@ -12,7 +12,7 @@ function suffstats(D::Type{MvNormal}, x::Matrix{Float64}, w::AbstractArray{Float
         end
     end
     m = s * inv(tw)
-    z = (x.-m).* sqrt(w)' # subtract dim 1, multiply dim 2
+    z = (x.-m).* sqrt.(w)' # subtract dim 1, multiply dim 2
     s2 = A_mul_Bt(z, z)
 
     MvNormalStats(s, m, s2, tw)
@@ -148,7 +148,7 @@ function gaussian_mixture(prior::NormalWishart, T::Int64, alpha::Float64, x::Mat
                 logp[i] += π[k] * pdf(pred[k], x[:, i])
             end
         end
-        logp = log(logp)
+        logp = log.(logp)
 
         return logp
     end
