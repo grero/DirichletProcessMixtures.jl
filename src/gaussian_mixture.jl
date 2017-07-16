@@ -1,13 +1,15 @@
 import Distributions.MvNormalStats, Distributions.suffstats, Distributions.mean
 import ConjugatePriors.NormalWishart
-function suffstats(D::Type{MvNormal}, x::Matrix{Float64}, w::DenseArray{Float64})
+function suffstats(D::Type{MvNormal}, x::Matrix{Float64}, w::AbstractArray{Float64})
     d = size(x, 1)
     n = size(x, 2)
 
     tw = sum(w)
     s = zeros(d)
     for i=1:n
-        @devec s[:] += x[:, i] .* w[i]
+        for j in 1:d
+            s[j] += x[j, i] .* w[i]
+        end
     end
     m = s * inv(tw)
     z = (x.-m).* sqrt(w)' # subtract dim 1, multiply dim 2
@@ -31,8 +33,7 @@ function posterior_cool(prior::NormalWishart, ss::MvNormalStats)
     Lam0 = inv(TC0)
     z = prior.zeromean ? ss.m : ss.m - mu0
     Lam = inv(Lam0 + ss.s2 + kappa0*ss.tw/kappa*(z*z'))
-
-    return NormalWishart(mu, kappa, cholfact(Lam), nu)
+    return NormalWishart(mu, kappa, cholfact(Hermitian(Lam)), nu)
 end
 
 function expected_logdet(nw::NormalWishart)
@@ -91,7 +92,7 @@ function gaussian_mixture(prior::NormalWishart, T::Int64, alpha::Float64, x::Mat
         theta[k] = prior
     end
 
-    function cluster_update(k::Int64, z::DenseArray{Float64})
+    function cluster_update(k::Int64, z::AbstractArray{Float64})
         nw = posterior_cool(prior, suffstats(MvNormal, x, z))
         theta[k] = nw
     end
@@ -100,7 +101,7 @@ function gaussian_mixture(prior::NormalWishart, T::Int64, alpha::Float64, x::Mat
         return entropy(theta[k])
     end
 
-    function cluster_loglikelihood(k::Int64, z::DenseArray{Float64})
+    function cluster_loglikelihood(k::Int64, z::AbstractArray{Float64})
         post = posterior_cool(prior, suffstats(MvNormal, x, z))
         n = sum(z)
 

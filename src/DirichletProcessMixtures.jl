@@ -1,8 +1,6 @@
 module DirichletProcessMixtures
 
 using ConjugatePriors
-using Devectorize
-using ArrayViews
 using Distributions
 using PDMats
 

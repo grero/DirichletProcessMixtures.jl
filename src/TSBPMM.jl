@@ -41,7 +41,7 @@ function TSBPMM(N::Int64, T::Int64, α::Float64,
     if random_init
         rand!(logpi)
         ps = sum(logpi)
-        @devec logpi ./= ps
+        logpi ./= ps
         logpi = log(logpi)
 
         rand!(z)
@@ -94,9 +94,9 @@ function variational_update(mix::TSBPMM)
             z[k] = mix.π[k] + mix.object_loglikelihood(k, i)
         end
 
-        @devec z[:] -= maximum(z)
+        z .-= maximum(z)
         z = exp(z)
-        @devec z[:] ./= sum(z)
+        z ./= sum(z)
 
         assert(abs(sum(z) - 1.) < 1e-7)
 
@@ -175,7 +175,7 @@ end
 function map_assignments(mix::TSBPMM)
     z = zeros(Int64, N(mix))
     for i=1:N(mix)
-        z[i] = indmax(sub(mix.z, i, :))
+        z[i] = indmax(view(mix.z, i, :))
     end
     return z
 end
