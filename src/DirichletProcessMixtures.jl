@@ -17,4 +17,6 @@ include("TSBPMM.jl")
 include("student.jl")
 include("gaussian_mixture.jl")
 
+export DPGMM
+
 end
