@@ -92,8 +92,9 @@ end
 function variational_update(mix::DPMM, x::Matrix{Float64})
     z = zeros(mix.M)
     for i=1:mix.N
+        _x = x[:,i]
         for k=1:mix.M
-            z[k] = mix.π[k] + object_loglikelihood(mix, k, i,x)
+            z[k] = mix.π[k] + object_loglikelihood(mix, k, _x)
         end
 
         z .-= maximum(z)

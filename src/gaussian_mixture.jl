@@ -156,6 +156,15 @@ function object_loglikelihood(model::DPGMM, k::Int64, i::Int64,x::Matrix{Float64
     return ll
 end
 
+function object_loglikelihood(model::DPGMM, k::Int64, x::Vector{Float64})
+    nw = model.theta[k]
+    ll = -nw.dim/2 * log(2*pi) + expected_logdet(nw)/2
+    dx = nw.Tchol[:U] * (x - nw.mu)
+    ll -= (nw.dim / nw.kappa + nw.nu * dot(dx, dx)) / 2
+
+    return ll
+end
+
 cluster_entropy(model::DPGMM, k::Int64) = entropy(model.theta[k])
 
 function predictive_loglikelihood(model::DPGMM, xt::Matrix{Float64})
