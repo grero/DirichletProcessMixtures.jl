@@ -1,5 +1,7 @@
 DirichletProcessMixtures.jl
 =======
+[![Build Status](https://travis-ci.org/grero/DirichletProcessMixtures.jl.svg?branch=master)](https://travis-ci.org/grero/DirichletProcessMixtures.jl)
+[![codecov](https://codecov.io/gh/grero/DirichletProcessMixtures.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/grero/DirichletProcessMixtures.jl)
 
 This package implements Dirichlet Process Mixture Models in Julia using variational inference for truncated stick-breaking representation of Drichlet Process.
 
