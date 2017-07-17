@@ -33,8 +33,8 @@ function DPGMM(N::Int64, M::Int64, α::Float64,prior::Distribution;random_init=f
             z[i, :] ./= zs
         end
     else
-        logpi .= -log.(T)
-        z .= 1. / T
+        logpi .= -log.(M)
+        z .= 1. / M
     end
     return DPGMM(N, M, α, logpi, z, prior)
 end
