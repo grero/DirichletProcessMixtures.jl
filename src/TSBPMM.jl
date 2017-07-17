@@ -174,9 +174,9 @@ function entropy(mix::DPMM)
     return ee
 end
 
-function map_assignments(mix::TSBPMM)
-    z = zeros(Int64, N(mix))
-    for i=1:N(mix)
+function map_assignments(mix::DPMM)
+    z = zeros(Int64, mix.N)
+    for i=1:mix.N
         z[i] = indmax(view(mix.z, i, :))
     end
     return z
