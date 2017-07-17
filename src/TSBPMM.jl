@@ -1,5 +1,7 @@
 import Distributions.entropy
 
+abstract type DPMM end
+
 immutable TSBPMM
     α::Float64
     qv::Vector{Beta}
@@ -66,12 +68,12 @@ end
 N(mix::TSBPMM) = size(mix.z, 1)
 T(mix::TSBPMM) = size(mix.z, 2)
 
-function infer(mix::TSBPMM, niter::Int64, ltol::Float64; iter_callback::Function = (oksa...) -> begin end)
-    prev_lb = variational_lower_bound(mix)
+function infer(mix::DPMM, x::Matrix{Float64}, niter::Int64, ltol::Float64; iter_callback::Function = (oksa...) -> begin end)
+    prev_lb = variational_lower_bound(mix,x)
     for iter=1:niter
-        variational_update(mix)
+        variational_update(mix,x)
 
-        lb = variational_lower_bound(mix)
+        lb = variational_lower_bound(mix,x)
 
         iter_callback(mix, iter, lb)
 
@@ -87,11 +89,11 @@ function infer(mix::TSBPMM, niter::Int64, ltol::Float64; iter_callback::Function
     return niter
 end
 
-function variational_update(mix::TSBPMM)
-    z = zeros(T(mix))
-    for i=1:N(mix)
-        for k=1:T(mix)
-            z[k] = mix.π[k] + mix.object_loglikelihood(k, i)
+function variational_update(mix::DPMM, x::Matrix{Float64})
+    z = zeros(mix.M)
+    for i=1:mix.N
+        for k=1:mix.M
+            z[k] = mix.π[k] + object_loglikelihood(mix, k, i,x)
         end
 
         z .-= maximum(z)
@@ -104,11 +106,11 @@ function variational_update(mix::TSBPMM)
     end
 
     ts = 0.
-    for k=T(mix):-1:1
+    for k=mix.M:-1:1
         zk = view(mix.z, :, k)
-        mix.cluster_update(k, zk)
+        cluster_update(mix, k, zk, x)
         zs = sum(zk)
-        if k < T(mix)
+        if k < mix.M
             mix.qv[k] = Beta(1. + zs, mix.α + ts)
         end
         ts += zs
@@ -117,8 +119,8 @@ function variational_update(mix::TSBPMM)
     logpi!(mix.π, mix)
 end
 
-function variational_lower_bound(mix::TSBPMM)
-    return loglikelihood(mix) + entropy(mix)
+function variational_lower_bound(mix::DPMM,x::Matrix{Float64})
+    return loglikelihood(mix,x) + entropy(mix)
 end
 
 meanlog(beta::Beta) = digamma(beta.α) - digamma(beta.α + getfield(beta,2))
@@ -126,27 +128,27 @@ meanlogmirror(beta::Beta) = digamma(getfield(beta,2)) - digamma(beta.α + getfie
 meanmirror(beta::Beta) = getfield(beta,2) / (beta.α + getfield(beta,2))
 logmeanmirror(beta::Beta) = log(getfield(beta,2)) - log(beta.α + getfield(beta,2))
 
-function logpi!(π::Vector{Float64}, mix::TSBPMM)
+function logpi!(π::Vector{Float64}, mix::DPMM)
     r = 0.
-    for k=1:T(mix)-1
+    for k=1:mix.M-1
         π[k] = meanlog(mix.qv[k]) + r
         r += meanlogmirror(mix.qv[k])
     end
-    π[T(mix)] = r
+    π[mix.M] = r
 end
 
-function loglikelihood(mix::TSBPMM)
+function loglikelihood(mix::DPMM,x::Matrix{Float64})
     ll = 0.
 
     ts = 0.
-    for k=T(mix):-1:1
+    for k=mix.M:-1:1
         zk = view(mix.z, :, k)
 #        zk = mix.z[:, k]
-        ll += mix.cluster_loglikelihood(k, zk)
+        ll += cluster_loglikelihood(mix, k, zk,x)
         assert(!isnan(ll))
 
         zs = sum(zk)
-        if k <= T(mix) - 1
+        if k <= mix.M - 1
             qv = mix.qv[k]
             ll += zs * meanlog(qv) + (mix.α+ts-1) * meanlogmirror(qv) - lbeta(1., mix.α)
             assert(!isnan(ll))
@@ -158,15 +160,15 @@ function loglikelihood(mix::TSBPMM)
     return ll
 end
 
-function entropy(mix::TSBPMM)
+function entropy(mix::DPMM)
     ee = 0.
     ee += entropy(mix.z)
 
-    for k=1:T(mix)
-        if k < T(mix)
+    for k=1:mix.M
+        if k < mix.M
             ee += entropy(mix.qv[k])
         end
-        ee += mix.cluster_entropy(k)
+        ee += cluster_entropy(mix, k)
     end
 
     return ee
@@ -180,14 +182,14 @@ function map_assignments(mix::TSBPMM)
     return z
 end
 
-function pi!(π::Vector{Float64}, mix::TSBPMM)
+function pi!(π::Vector{Float64}, mix::DPMM)
     r = 0.
-    for k=1:T(mix)-1
+    for k=1:mix.M-1
         qv = mix.qv[k]
         π[k] = exp(log(mean(qv)) + r)
         r += logmeanmirror(qv)
     end
-    π[T(mix)] = exp(r)
+    π[mix.M] = exp(r)
     assert(abs(sum(π) - 1.) < 1e-7)
 end
 
