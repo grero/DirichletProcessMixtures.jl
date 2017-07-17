@@ -23,18 +23,18 @@ xtest = balley(B, 3.)
 N = B * 5
 M = N
 
-prior = NormalWishart(zeros(2), 1e-7, eye(2) / 4, 4.0001)
+prior = NormalWishart(zeros(2), 1e-7, eye(2) / 4.0, 4.0001)
 
 T = 20
 maxiter = 4000
-gm, theta, predictive_likelihood = gaussian_mixture(prior, T, 1e-1, x)
+model = DirichletProcessMixtures.DPGMM(size(x,2), T, 1e-1, prior)
 
 lb_log = zeros(maxiter)
 tl_log = zeros(maxiter)
 
 tic()
-function iter_callback(mix::TSBPMM, iter::Int64, lower_bound::Float64)
-    pl = sum(predictive_likelihood(xtest)) / M
+function iter_callback(mix::DirichletProcessMixtures.DPMM, iter::Int64, lower_bound::Float64)
+    pl = sum(DirichletProcessMixtures.predictive_loglikelihood(mix, xtest)) /mix.M
     lb_log[iter] = lower_bound
     tl_log[iter] = pl
     toc()
@@ -42,7 +42,7 @@ function iter_callback(mix::TSBPMM, iter::Int64, lower_bound::Float64)
     tic()
 end
 
-niter = infer(gm, maxiter, 1e-5; iter_callback=iter_callback)
+niter = DirichletProcessMixtures.infer(model, x, maxiter, 1e-5; iter_callback=iter_callback)
 
 using PyCall
 @pyimport pylab
@@ -53,7 +53,7 @@ pylab.plot(1:niter, tl_log[1:niter]; color=(0., 0., 1.))
 
 pylab.show()
     
-z = map_assignments(gm)
+z = DirichletProcessMixtures.map_assignments(model)
 for k=1:T
 xk = x[:, z .== k]
     pylab.scatter(xk[1, :], xk[2, :]; color=rand(3))
