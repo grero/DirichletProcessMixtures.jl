@@ -91,10 +91,11 @@ end
 
 function variational_update(mix::DPMM, x::Matrix{Float64})
     z = zeros(mix.M)
+    size(x,2) == mix.N || throw(ArgumentError("Inconsistent dimensions size(x,2) != mix.N"))
     for i=1:mix.N
-        _x = x[:,i]
+        @inbounds _x = x[:,i]
         for k=1:mix.M
-            z[k] = mix.π[k] + object_loglikelihood(mix, k, _x)
+            @inbounds z[k] = mix.π[k] + object_loglikelihood(mix, k, _x)
         end
 
         z .-= maximum(z)
@@ -103,7 +104,7 @@ function variational_update(mix::DPMM, x::Matrix{Float64})
 
         assert(abs(sum(z) - 1.) < 1e-7)
 
-        mix.z[i, :] = z
+        @inbounds mix.z[i, :] .= z
     end
 
     ts = 0.
