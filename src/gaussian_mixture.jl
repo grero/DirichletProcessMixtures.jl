@@ -168,8 +168,9 @@ function predictive_loglikelihood(model::DPGMM, xt::Matrix{Float64})
     pred = map(predictive, model.theta)
 
     for i=1:nt
+        _x = xt[:,i]
         for k=1:model.M
-            logp[i] += π[k] * pdf(pred[k], xt[:, i])
+            logp[i] += π[k] * pdf(pred[k], _x)
         end
     end
     logp = log.(logp)
