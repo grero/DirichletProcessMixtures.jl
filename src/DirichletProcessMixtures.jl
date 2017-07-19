@@ -3,6 +3,7 @@ module DirichletProcessMixtures
 using ConjugatePriors
 using Distributions
 using PDMats
+using Distances
 
 # Multidimensional gamma / partial gamma function
 function lpgamma(p::Int, a::Float64)
@@ -16,6 +17,7 @@ end
 include("TSBPMM.jl")
 include("student.jl")
 include("gaussian_mixture.jl")
+include("utils.jl")
 
 export DPGMM
 

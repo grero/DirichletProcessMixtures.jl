@@ -44,3 +44,9 @@ C = countmap(z)
 @test C[4] == 59
 @test C[6] == 61
 @test niter == 117
+
+ll = DirichletProcessMixtures.lratio(model, x)
+@test ll[1] ≈ 70.09237663387312
+@test ll[3] ≈ 32.30968894374262
+@test ll[4] ≈ 34.60151572248789
+@test ll[6] ≈ 35.17672736953846
