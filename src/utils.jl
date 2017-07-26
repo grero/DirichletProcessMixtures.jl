@@ -62,20 +62,6 @@ function lratio(cids::Array{Int64,1}, X::Matrix{Float64}, Σ::Vector{Matrix{Floa
 end
 
 function lratio(model::DPGMM, X::Matrix{Float64})
-    μ = Array{Array{Float64,1}}(0)
-    Σ = Array{Matrix{Float64}}(0)
-    clusters = Array{Int64}(0)
-    #draw from the prior
-    for c in 1:length(model.theta)
-        if isposdef(full(model.theta[c].Tchol))
-            mm = mean(model.theta[c])
-            push!(μ, mm.μ)
-            push!(Σ,full(mm.J))
-            push!(clusters, c)
-        end
-    end
     cids = map_assignments(model)
-    _idx = findin(cids, clusters)
-    _cidx = findin(clusters, unique(cids[_idx]))
-    lratio(cids[_idx], X[:,_idx], Σ[_cidx], μ[_cidx])
+    lratio(cids, X)
 end
