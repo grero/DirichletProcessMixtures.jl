@@ -1,5 +1,6 @@
 module DirichletProcessMixtures
 
+using ProgressMeter
 using ConjugatePriors
 using Distributions
 using PDMats

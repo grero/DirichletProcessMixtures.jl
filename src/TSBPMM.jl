@@ -70,11 +70,13 @@ T(mix::TSBPMM) = size(mix.z, 2)
 
 function infer(mix::DPMM, x::Matrix{Float64}, niter::Int64, ltol::Float64; iter_callback::Function = (oksa...) -> begin end)
     prev_lb = variational_lower_bound(mix,x)
+    prog = ProgressThresh(ltol, "Optimizing:")
     for iter=1:niter
         variational_update(mix,x)
 
         lb = variational_lower_bound(mix,x)
 
+        update!(prog, lb-prev_lb)
         iter_callback(mix, iter, lb)
 
         @assert lb >= prev_lb "Not monotone"
